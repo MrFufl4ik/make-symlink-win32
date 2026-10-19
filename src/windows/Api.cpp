@@ -32,16 +32,16 @@ void print(const std::wstring &string) {
     }
 }
 
+void println(const std::wstring &string) {
+    print(string + L"\r\n");
+}
+
 DWORD createSymLink(const std::wstring &targetPath, const std::wstring &linkPath) {
     DWORD flags = SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
     if (isDirectoryExists(targetPath)) flags |= SYMBOLIC_LINK_FLAG_DIRECTORY;
     const BOOLEAN result = CreateSymbolicLinkW(linkPath.c_str(), targetPath.c_str(), flags);
     if (!result) return GetLastError();
     return 0;
-}
-
-void println(const std::wstring &string) {
-    print(string + L"\r\n");
 }
 
 bool isDirectoryExists(const std::wstring &path) {
