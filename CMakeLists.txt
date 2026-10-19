@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(make-symlink-win32 LANGUAGES CXX)
 
-add_executable(make-symlink-win32 src/main.cpp)
+add_executable(make-symlink-win32 src/main.cpp
+        src/windows/Api.cpp
+        src/windows/Api.h
+)
 
 set_target_properties(make-symlink-win32 PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(make-symlink-win32 PRIVATE cxx_std_20)

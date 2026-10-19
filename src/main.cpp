@@ -1,39 +1,33 @@
 #include <string>
-#include <windows.h>
 
-#define INVALID_HANDLE_VALUE_ERROR_CODE (-8800 - 2)
+#include "windows/Api.h"
 
-void println(const std::wstring &s) {
-    HANDLE stdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (stdOutput == INVALID_HANDLE_VALUE || stdOutput == nullptr) exit(INVALID_HANDLE_VALUE_ERROR_CODE);
+#define LOCAL_DIRECTORY_DOESNT_EXISTS_ERROR_CODE (8810 + 0)
+#define USER_DONT_PASS_CORRECT_ARGUMENTS_ERROR_CODE (8810 + 1)
 
-    const std::wstring string = s + L"\r\n";
+const std::wstring PROG_NAME = L"make-symlink-win32.exe";
 
-    DWORD written = 0;
-    DWORD consoleMode = 0;
-    if (GetConsoleMode(stdOutput, &consoleMode)) {
-        WriteConsoleW(stdOutput, string.c_str(), string.size(), &written, nullptr);
-    } else {
-        const int length = WideCharToMultiByte(
-            CP_UTF8,
-            0,
-            string.c_str(),
-            static_cast<int>(string.size()),
-            nullptr, 0, nullptr, nullptr
-        );
-        if (length <= 0) return;
-        std::string utf8(length, '\0');
-        WideCharToMultiByte(
-            CP_UTF8, 0,
-            string.c_str(),
-            static_cast<int>(string.size()),
-            utf8.data(), length, nullptr, nullptr
-        );
-        WriteFile(stdOutput, utf8.data(), utf8.size(), &written, nullptr);
-    }
+void onUserDontPassCorrectArguments() {
+    println(PROG_NAME + L": missing operand" );
+    println(L"Try: " + PROG_NAME + L" targetPath linkPath");
 }
 
-int wmain(int argc, wchar_t *argv[]) {
-    println(L"Hello, world!");
+int wmain(const int argc, wchar_t *argv[]) {
+    if (argc != 1 /*first argument equal path to current binary*/ + 2) {
+        onUserDontPassCorrectArguments();
+        std::exit(USER_DONT_PASS_CORRECT_ARGUMENTS_ERROR_CODE);
+    }
+    const std::wstring targetPath {argv[1]};
+    if (!isEntryExists(targetPath)) {
+        println(L"Target entry " + targetPath + L" doesn't exist!");
+        std::exit(LOCAL_DIRECTORY_DOESNT_EXISTS_ERROR_CODE);
+    }
+    const std::wstring linkPath {argv[2]};
+    const DWORD result = createSymLink(targetPath, linkPath);
+    if (result) {
+        println(L"Error on symlink creation: " + std::to_wstring(result));
+        std::exit(static_cast<int>(result));
+    }
+    println(L"Symlink " + linkPath + L" created successful!");
     return 0;
 }
